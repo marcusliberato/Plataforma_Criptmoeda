@@ -190,7 +190,7 @@ export default function App() {
 
   return (
     <div className='app'>
-      <header className='hero'>
+      <header className='hero' style={{ paddingBottom: '10px' }}>
         <nav className='nav'>
           <div className='brand'>
             <span className='brand-dot' aria-hidden='true' />
@@ -317,7 +317,15 @@ export default function App() {
           </div>
         </section>
 
-        <section className='section highlight'>
+        <section
+          className='section highlight'
+          style={{
+            paddingLeft: '20px',
+            paddingRight: '20px',
+            paddingBottom: '25px',
+            paddingTop: '25px',
+          }}
+        >
           <div className='highlight-content'>
             <p className='section-tag'>Experiência mobile</p>
             <h2>Componentes dinâmicos e reutilizáveis</h2>
