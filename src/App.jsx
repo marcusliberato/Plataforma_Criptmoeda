@@ -1,29 +1,39 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 
-const marketData = [
+const BINANCE_BASE_URL =
+  import.meta.env.VITE_BINANCE_BASE_URL || 'https://data-api.binance.vision';
+
+const trackedSymbols = [
+  { apiSymbol: 'BTCUSDT', name: 'Bitcoin', symbol: 'BTC' },
+  { apiSymbol: 'ETHUSDT', name: 'Ethereum', symbol: 'ETH' },
+  { apiSymbol: 'SOLUSDT', name: 'Solana', symbol: 'SOL' },
+];
+
+const fallbackMarketData = [
   {
     name: 'Bitcoin',
     symbol: 'BTC',
-    price: 'R$ 358.240',
+    price: 'US$ 0,00',
     change: '+3,4%',
     trend: 'up',
-    volume: 'R$ 42,1B',
+    volume: '0 USDT',
   },
   {
     name: 'Ethereum',
     symbol: 'ETH',
-    price: 'R$ 18.920',
+    price: 'US$ 0,00',
     change: '+2,1%',
     trend: 'up',
-    volume: 'R$ 18,7B',
+    volume: '0 USDT',
   },
   {
     name: 'Solana',
     symbol: 'SOL',
-    price: 'R$ 720',
+    price: 'US$ 0,00',
     change: '-1,2%',
     trend: 'down',
-    volume: 'R$ 4,3B',
+    volume: '0 USDT',
   },
 ];
 
@@ -78,7 +88,106 @@ const highlights = [
   },
 ];
 
+function formatUsdPrice(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatPercent(value) {
+  const numericValue = Number.isFinite(value) ? value : 0;
+  const sign = numericValue >= 0 ? '+' : '-';
+  const absolute = Math.abs(numericValue).toLocaleString('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+
+  return `${sign}${absolute}%`;
+}
+
+function formatCompact(value) {
+  return new Intl.NumberFormat('pt-BR', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+async function fetchTicker24h(symbol) {
+  const url = new URL('/api/v3/ticker/24hr', BINANCE_BASE_URL);
+  url.searchParams.set('symbol', symbol);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Falha ao consultar ${symbol}: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export default function App() {
+  const [marketData, setMarketData] = useState(fallbackMarketData);
+  const [marketStatus, setMarketStatus] = useState('idle');
+  const [marketError, setMarketError] = useState('');
+  const [lastMarketUpdate, setLastMarketUpdate] = useState(null);
+
+  const loadMarketData = useCallback(async () => {
+    setMarketStatus('loading');
+    setMarketError('');
+
+    try {
+      const tickers = await Promise.all(
+        trackedSymbols.map((asset) => fetchTicker24h(asset.apiSymbol)),
+      );
+
+      const parsed = tickers.map((ticker, index) => {
+        const asset = trackedSymbols[index];
+        const price = Number.parseFloat(ticker.lastPrice);
+        const changePercent = Number.parseFloat(ticker.priceChangePercent);
+        const quoteVolume = Number.parseFloat(ticker.quoteVolume);
+
+        return {
+          name: asset.name,
+          symbol: asset.symbol,
+          price: formatUsdPrice(price),
+          change: formatPercent(changePercent),
+          trend: changePercent >= 0 ? 'up' : 'down',
+          volume: `${formatCompact(quoteVolume)} USDT`,
+        };
+      });
+
+      setMarketData(parsed);
+      setLastMarketUpdate(new Date());
+      setMarketStatus('ok');
+    } catch {
+      setMarketStatus('error');
+      setMarketError(
+        'Não foi possível atualizar os preços da Binance agora. Exibindo última leitura.',
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMarketData();
+    const intervalId = setInterval(loadMarketData, 30_000);
+
+    return () => clearInterval(intervalId);
+  }, [loadMarketData]);
+
+  const marketUpdateLabel = useMemo(() => {
+    if (!lastMarketUpdate) {
+      return 'Aguardando primeira atualização';
+    }
+
+    return `Atualizado às ${lastMarketUpdate.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })}`;
+  }, [lastMarketUpdate]);
+
   return (
     <div className='app'>
       <header className='hero'>
@@ -175,11 +284,19 @@ export default function App() {
             <div>
               <p className='section-tag'>Mercado agora</p>
               <h2>Principais criptomoedas</h2>
+              <p className='market-meta'>{marketUpdateLabel}</p>
             </div>
-            <button className='ghost-button' type='button'>
-              Atualizar
+            <button
+              className='ghost-button'
+              type='button'
+              onClick={loadMarketData}
+              disabled={marketStatus === 'loading'}
+            >
+              {marketStatus === 'loading' ? 'Atualizando...' : 'Atualizar'}
             </button>
           </div>
+
+          {marketError && <p className='market-error'>{marketError}</p>}
 
           <div className='market-grid'>
             {marketData.map((asset) => (
