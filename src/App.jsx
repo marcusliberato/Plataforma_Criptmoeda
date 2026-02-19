@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
+import ExploreMarketPage from './components/ExploreMarketPage';
 
 const BINANCE_BASE_URL =
   import.meta.env.VITE_BINANCE_BASE_URL || 'https://data-api.binance.vision';
@@ -128,6 +129,7 @@ async function fetchTicker24h(symbol) {
 }
 
 export default function App() {
+  const [activePage, setActivePage] = useState('home');
   const [marketData, setMarketData] = useState(fallbackMarketData);
   const [marketStatus, setMarketStatus] = useState('idle');
   const [marketError, setMarketError] = useState('');
@@ -226,7 +228,11 @@ export default function App() {
             </p>
 
             <div className='hero-actions'>
-              <button className='primary-button' type='button'>
+              <button
+                className='primary-button'
+                type='button'
+                onClick={() => setActivePage('market')}
+              >
                 Explorar mercado
               </button>
               <button className='outline-button' type='button'>
@@ -279,172 +285,192 @@ export default function App() {
       </header>
 
       <main>
-        <section className='section' id='mercado'>
-          <div className='section-header'>
-            <div>
-              <p className='section-tag'>Mercado agora</p>
-              <h2>Principais criptomoedas</h2>
-              <p className='market-meta'>{marketUpdateLabel}</p>
-            </div>
-            <button
-              className='ghost-button'
-              type='button'
-              onClick={loadMarketData}
-              disabled={marketStatus === 'loading'}
-            >
-              {marketStatus === 'loading' ? 'Atualizando...' : 'Atualizar'}
-            </button>
-          </div>
-
-          {marketError && <p className='market-error'>{marketError}</p>}
-
-          <div className='market-grid'>
-            {marketData.map((asset) => (
-              <article key={asset.symbol} className='market-card'>
+        {activePage === 'home' ? (
+          <>
+            <section className='section' id='mercado'>
+              <div className='section-header'>
                 <div>
-                  <p className='asset-name'>
-                    {asset.name} <span>{asset.symbol}</span>
+                  <p className='section-tag'>Mercado agora</p>
+                  <h2>Principais criptomoedas</h2>
+                  <p className='market-meta'>{marketUpdateLabel}</p>
+                </div>
+                <button
+                  className='ghost-button'
+                  type='button'
+                  onClick={loadMarketData}
+                  disabled={marketStatus === 'loading'}
+                >
+                  {marketStatus === 'loading' ? 'Atualizando...' : 'Atualizar'}
+                </button>
+              </div>
+
+              {marketError && <p className='market-error'>{marketError}</p>}
+
+              <div className='market-grid'>
+                {marketData.map((asset) => (
+                  <article key={asset.symbol} className='market-card'>
+                    <div>
+                      <p className='asset-name'>
+                        {asset.name} <span>{asset.symbol}</span>
+                      </p>
+                      <h3>{asset.price}</h3>
+                    </div>
+
+                    <div className={`asset-change ${asset.trend}`}>
+                      <span>{asset.change}</span>
+                      <p>Volume {asset.volume}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section
+              className='section highlight'
+              style={{
+                paddingLeft: '20px',
+                paddingRight: '20px',
+                paddingBottom: '25px',
+                paddingTop: '25px',
+              }}
+            >
+              <div className='highlight-content'>
+                <p className='section-tag'>Experiência mobile</p>
+                <h2>Componentes dinâmicos e reutilizáveis</h2>
+                <p>
+                  Construímos módulos flexíveis que se adaptam a qualquer
+                  tamanho de tela. A navegação é fluida, com gestos touch e
+                  feedback imediato.
+                </p>
+
+                <div className='highlight-list'>
+                  {highlights.map((item) => (
+                    <div key={item.title}>
+                      <h3>{item.title}</h3>
+                      <p>{item.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className='highlight-card'>
+                <h3>Últimas transações</h3>
+
+                <div className='transaction-list'>
+                  {transactions.map((transaction, idx) => (
+                    <div
+                      key={`${transaction.asset}-${idx}`}
+                      className='transaction-item'
+                    >
+                      <div>
+                        <p className='transaction-type'>{transaction.type}</p>
+                        <p className='transaction-asset'>{transaction.asset}</p>
+                        <span>{transaction.amount}</span>
+                      </div>
+
+                      <div className='transaction-meta'>
+                        <span className={`status ${transaction.statusKey}`}>
+                          {transaction.status}
+                        </span>
+                        <small>{transaction.time}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <section className='section' id='fluxo'>
+              <div className='section-header'>
+                <div>
+                  <p className='section-tag'>Fluxo de compra e venda</p>
+                  <h2>Simulação rápida de operação</h2>
+                </div>
+              </div>
+
+              <div className='action-grid'>
+                <div className='action-card'>
+                  <h3>Comprar cripto</h3>
+                  <p>
+                    Selecione o ativo e defina o valor. O cálculo é automático.
                   </p>
-                  <h3>{asset.price}</h3>
-                </div>
 
-                <div className={`asset-change ${asset.trend}`}>
-                  <span>{asset.change}</span>
-                  <p>Volume {asset.volume}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+                  <div className='action-inputs'>
+                    <label>
+                      Ativo
+                      <select defaultValue='BTC'>
+                        <option value='BTC'>BTC - Bitcoin</option>
+                        <option value='ETH'>ETH - Ethereum</option>
+                        <option value='SOL'>SOL - Solana</option>
+                      </select>
+                    </label>
 
-        <section
-          className='section highlight'
-          style={{
-            paddingLeft: '20px',
-            paddingRight: '20px',
-            paddingBottom: '25px',
-            paddingTop: '25px',
-          }}
-        >
-          <div className='highlight-content'>
-            <p className='section-tag'>Experiência mobile</p>
-            <h2>Componentes dinâmicos e reutilizáveis</h2>
-            <p>
-              Construímos módulos flexíveis que se adaptam a qualquer tamanho de
-              tela. A navegação é fluida, com gestos touch e feedback imediato.
-            </p>
-
-            <div className='highlight-list'>
-              {highlights.map((item) => (
-                <div key={item.title}>
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className='highlight-card'>
-            <h3>Últimas transações</h3>
-
-            <div className='transaction-list'>
-              {transactions.map((t, idx) => (
-                <div key={`${t.asset}-${idx}`} className='transaction-item'>
-                  <div>
-                    <p className='transaction-type'>{t.type}</p>
-                    <p className='transaction-asset'>{t.asset}</p>
-                    <span>{t.amount}</span>
+                    <label>
+                      Valor (R$)
+                      <input type='text' placeholder='0,00' />
+                    </label>
                   </div>
 
-                  <div className='transaction-meta'>
-                    <span className={`status ${t.statusKey}`}>{t.status}</span>
-                    <small>{t.time}</small>
-                  </div>
+                  <button className='primary-button' type='button'>
+                    Confirmar compra
+                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
 
-        <section className='section' id='fluxo'>
-          <div className='section-header'>
-            <div>
-              <p className='section-tag'>Fluxo de compra e venda</p>
-              <h2>Simulação rápida de operação</h2>
-            </div>
-          </div>
+                <div className='action-card'>
+                  <h3>Vender cripto</h3>
+                  <p>
+                    Veja o impacto na sua carteira e confirme em poucos toques.
+                  </p>
 
-          <div className='action-grid'>
-            <div className='action-card'>
-              <h3>Comprar cripto</h3>
-              <p>Selecione o ativo e defina o valor. O cálculo é automático.</p>
+                  <div className='action-inputs'>
+                    <label>
+                      Ativo
+                      <select defaultValue='ETH'>
+                        <option value='BTC'>BTC - Bitcoin</option>
+                        <option value='ETH'>ETH - Ethereum</option>
+                        <option value='SOL'>SOL - Solana</option>
+                      </select>
+                    </label>
 
-              <div className='action-inputs'>
-                <label>
-                  Ativo
-                  <select defaultValue='BTC'>
-                    <option value='BTC'>BTC - Bitcoin</option>
-                    <option value='ETH'>ETH - Ethereum</option>
-                    <option value='SOL'>SOL - Solana</option>
-                  </select>
-                </label>
+                    <label>
+                      Quantidade
+                      <input type='text' placeholder='0,00' />
+                    </label>
+                  </div>
 
-                <label>
-                  Valor (R$)
-                  <input type='text' placeholder='0,00' />
-                </label>
+                  <button className='outline-button' type='button'>
+                    Simular venda
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className='section cta'>
+              <div>
+                <h2>Pronto para começar?</h2>
+                <p>
+                  Crie sua conta, personalize alertas e acompanhe o mercado com
+                  segurança e alta performance.
+                </p>
               </div>
 
-              <button className='primary-button' type='button'>
-                Confirmar compra
-              </button>
-            </div>
-
-            <div className='action-card'>
-              <h3>Vender cripto</h3>
-              <p>Veja o impacto na sua carteira e confirme em poucos toques.</p>
-
-              <div className='action-inputs'>
-                <label>
-                  Ativo
-                  <select defaultValue='ETH'>
-                    <option value='BTC'>BTC - Bitcoin</option>
-                    <option value='ETH'>ETH - Ethereum</option>
-                    <option value='SOL'>SOL - Solana</option>
-                  </select>
-                </label>
-
-                <label>
-                  Quantidade
-                  <input type='text' placeholder='0,00' />
-                </label>
+              <div className='cta-actions'>
+                <button className='primary-button' type='button'>
+                  Abrir conta gratuita
+                </button>
+                <button className='ghost-button' type='button'>
+                  Falar com o time
+                </button>
               </div>
-
-              <button className='outline-button' type='button'>
-                Simular venda
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className='section cta'>
-          <div>
-            <h2>Pronto para começar?</h2>
-            <p>
-              Crie sua conta, personalize alertas e acompanhe o mercado com
-              segurança e alta performance.
-            </p>
-          </div>
-
-          <div className='cta-actions'>
-            <button className='primary-button' type='button'>
-              Abrir conta gratuita
-            </button>
-            <button className='ghost-button' type='button'>
-              Falar com o time
-            </button>
-          </div>
-        </section>
+            </section>
+          </>
+        ) : (
+          <ExploreMarketPage
+            marketData={marketData}
+            marketUpdateLabel={marketUpdateLabel}
+            onBack={() => setActivePage('home')}
+          />
+        )}
       </main>
 
       <footer className='footer'>
