@@ -285,6 +285,10 @@
   border-radius: 16px;
 }
 
+.transaction-item strong {
+  font-size: 0.95rem;
+}
+
 .transaction-type {
   margin: 0;
   font-weight: 600;
@@ -396,6 +400,13 @@
   cursor: pointer;
 }
 
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 .primary-button {
   background: #5b63ff;
   color: #ffffff;
@@ -421,6 +432,29 @@
 .ghost-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+}
+
+.page-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.page-header {
+  padding: 20px 20px 12px;
+}
+
+.page-main {
+  padding-bottom: 40px;
+}
+
+.transaction-page-list {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.transaction-page-list .transaction-item {
+  color: #f8fafc;
 }
 
 @media (min-width: 768px) {
@@ -484,3 +518,10 @@
     margin: 0 100px 80px;
   }
 }
+  .page-header {
+    padding: 28px 60px 16px;
+  }
+
+  .page-header {
+    padding: 32px 100px 18px;
+  }
